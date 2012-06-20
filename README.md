@@ -10,6 +10,11 @@ GOAL
 
 The goal of this project is to create a tool that can be used to easily create Gentoo ebuilds from various sources.
 
+Prototype:
+----------
+
+Hackish proof-of-concept bash script to explore what we need. Maybe refactor later to a real language
+
 Milestone 1: Web-based ebuild generation
 ----------------------------------------
 sourceforge.net, the Debian project all have rather well-known web sites which can be used to extract information about their hosted software.
@@ -20,11 +25,13 @@ Milestone 2: handle different build and install systems
 -------------------------------------------------------
 Primarily should fill in ebuild inherit and build info
 
+    Examples: autotools, boost-build, scons, Python ...
+
 Milestone 3: true alien
 -----------------------
 
 Where available, build info from other packages should be converted to ebuilds.
 
-	Examples: .deb build
-              .rpm .spec files
-			  Arch AUR/PKGBUILD files
+    Examples: .deb has the debian/rules and other build instructions
+              .rpm has .spec files
+              Arch AUR/PKGBUILD files are poor-mans ebuilds anyway
