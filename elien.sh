@@ -14,7 +14,11 @@ write_head() {
 }
 
 write_common() {
-	echo ARCH=\"~$(portageq envvar ARCH)\" >> ${EBUILD}
+	echo LICENSE=\"\"				>> ${EBUILD}
+	echo SLOT=0					>> ${EBUILD}
+	echo KEYWORDS=\"~$(portageq envvar ARCH)\"	>> ${EBUILD}
+	echo IUSE=\"\"					>> ${EBUILD}
+
 	echo >> ${EBUILD}
 }
 
@@ -26,7 +30,9 @@ from_sf() {
 	local srcball=$(grep -A 3 'class="sfdl"' $data | tail -1 | sed 's@<small .*>\(.*\)</small>@\1@')
 	# FIXME handle other formats like zip
 	local srcfmt=$(echo $srcball | sed 's/.*\(tar.*\)/\1/')
-	local url="mirror://sourceforge/${PN}/\${P}${srcfmt}"
+	local url="mirror://sourceforge/${PN}/\${P}.${srcfmt}"
+
+	write_head
 
 	echo DESCRIPTION=\"$desc\"	>> ${EBUILD}
 	echo HOMEPAGE=\"$home\"		>> ${EBUILD}
@@ -43,49 +49,56 @@ from_pdo() {
 	local home=http://packages.debian.org/$1/${PN}
 	local data=${TD}/data.html
 	wget -q -O ${data} $home
-	local dscurl=$(grep dsc alpine | sed 's@.*<a href="\(.*\.dsc\)".*@\1@')
+	local dscurl=$(grep dsc $data | sed 's@.*<a href="\(.*\.dsc\)".*@\1@')
 	local dscdata=${TD}/data.dsc
 	wget -q -O ${dscdata} $dscurl
 
 	write_head
 	echo $(grep Description $data   | sed 's@.*content="\(.*\)".*@DESCRIPTION="\1"@')	>> ${EBUILD}
 	echo $(grep Homepage ${dscdata} | sed 's@Homepage: \(.*\)@HOMEPAGE="\1"@')		>> ${EBUILD}
-	echo SRC_URI=\"mirror://debian/$(awk '/orig/ {print $3}'  ${dscdata} | uniq)\"		>> ${EBUILD}
+	local srcball=$(awk '/orig/ {print $3}'  ${dscdata} | uniq)
+	echo SRC_URI=\"mirror://debian/pool/main/${srcball:0:1}/\${PN}/${srcball}\"		>> ${EBUILD}
 	write_common
 	echo "# ELIEN note: Debian lists these deps, you will have to find their Gentoo equivalents:" >> ${EBUILD}
-	echo $(grep Build-Depends: ${dscdata} | sed 's@Build-Depends: \(.*\)@#="\1"@') >> ${EBUILD}
+	echo $(grep Build-Depends: ${dscdata} | sed 's@Build-Depends: \(.*\)@#DEPEND="\1"@') >> ${EBUILD}
 }
 
 store_ebuild() {
 	local repo=$(portageq get_repo_path / ${OVERLAY})
 	local finalloc=$repo/$CATEGORY/${PN}
+	if [[ ! -w $repo ]]; then
+	    echo "ERROR: $OVERLAY does not exist or is not writeable!"
+	    exit 1
+	fi
 	mkdir -p ${finalloc}
 	cp -i ${EBUILD} ${finalloc}
-	ebuild ${finalloc}/*.ebuild manifest
+	ebuild ${finalloc}/*.ebuild manifest fetch unpack prepare
 }
 
 usage() {
 	
 	cat << EOF
 USAGE: ${0##*/} 
-	* -f <fromtag>      : what to convert from. see fromtags below.
-	* -p name           : what the package is called at the source
-	* -v version        : version of the package
-	* -c <category>     : use portage category <category>
-	* -o <repo_name>    : dump ebuild into overlay <repo_name>
-	  -h                : this help
-
-	options marked * are required.
+	-f <fromtag>      : what to convert from. see fromtags below.
+	-p name           : what the package is called at the source
+	-v version        : version of the package
+	-c <category>     : use portage category <category>
+	-o <repo_name>    : dump ebuild into overlay <repo_name>
+	  -h              : this help
 
 	fromtags:
 	    Websites:
-		sf   ...	sourceforge.net
-		pdo  ...	packages.debian.org, testing
-		pdos ...	packages.debian.org, stable
+		sf	... sourceforge.net
+		pdo	... packages.debian.org, testing
+		pdos	... packages.debian.org, stable
+		gh	... GitHub.com [not implemented]
+		gc	... code.google.com [not implemented]
+		gnu	... savannah.gnu.org [not implemented]
+		nongnu	... savannah.nongnu.org [not implemented]
 	    Packages:
-		ppa  ...	Ubuntu PPA [not implemented]
-		deb  ...	Debian package [not implemented]
-		rpm  ...	(S)RPM [not implemented]
+		ppa	... Ubuntu PPA [not implemented]
+		deb	... Debian package [not implemented]
+		rpm	... (S)RPM [not implemented]
 EOF
 }
 

@@ -8,16 +8,20 @@ Named after the alien tool from Debian.
 GOAL
 ====
 
-The goal of this project is to create a tool that can be used to easily create Gentoo ebuilds from various sources.
+The goal of this project is to create a tool that can be used to easily create
+Gentoo ebuilds from various sources.
 
 Prototype:
 ----------
 
-Hackish proof-of-concept bash script to explore what we need. Maybe refactor later to a real language
+Hackish proof-of-concept bash script to explore what we need. Maybe refactor
+later to a real language
 
 Milestone 1: Web-based ebuild generation
 ----------------------------------------
-sourceforge.net, the Debian project all have rather well-known web sites which can be used to extract information about their hosted software.
+sourceforge.net, the Debian project and other well-known web sites all have
+information which can be used to extract information about their hosted
+software.
 
 elien should use this information to fill in the metadata bits in an ebuild
 
